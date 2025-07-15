@@ -1,3 +1,4 @@
+import asyncio
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
 
@@ -22,6 +23,8 @@ def _make_prompt (files: list[ProgramFile]) -> str:
 async def translate_repo (repo_path: str) -> list[ProgramFile]:
     files = _extract_files(repo_path)
     prompt = _make_prompt (files)
+    print(prompt)
+    return []
     messages = [
         {"role": "system", "content": "You are an expert at translating python programs to lean4"},
         {"role": "user", "content": prompt}
@@ -33,3 +36,6 @@ async def translate_repo (repo_path: str) -> list[ProgramFile]:
     with open("out.txt", "w") as f:
         f.write(result.choices[0].message.content or "")
     return []
+
+if __name__ == "__main__":
+    asyncio.run(translate_repo("input_repos/mincut"))

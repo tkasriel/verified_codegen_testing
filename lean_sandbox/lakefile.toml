@@ -1,0 +1,10 @@
+name = "lean_sandbox"
+version = "0.1.0"
+defaultTargets = ["lean_sandbox"]
+
+[[lean_lib]]
+name = "LeanSandbox"
+
+[[lean_exe]]
+name = "lean_sandbox"
+root = "Main"
