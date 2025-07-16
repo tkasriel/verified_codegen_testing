@@ -1,41 +1,56 @@
 import asyncio
+import os
+import re
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
+from lean_interact import AutoLeanServer, Command, LeanREPLConfig, LeanServer
+import tqdm
 
 from classes import ProgramFile
+
 load_dotenv()
 client = AsyncOpenAI()
+print (f"openai key: {os.environ.get('OPENAI_API_KEY')}")
 
-def _extract_files (repo_path: str) -> list[ProgramFile]:
-    with open("/Users/tkasriel/verified_codegen_testing/verified_codegen_testing/input_repos/mincut/mincut.py", "r") as f:
-        return [ProgramFile(name="mincut.py",
-                        code="\n".join(f.readlines()))]
 
-def _make_prompt (files: list[ProgramFile]) -> str:
-    prompt = f"""Below is a Python repository, with several files together building necessary features related to the stack data structure. Translate the entire codebase into Lean4, sticking to best coding practices. Output your answer code directly organized by files
-    ```py
-    # mincut.py
-    {files[0].code}
-    ```
-"""
-    return prompt
+# def test_code (code: str) -> bool
 
-async def translate_repo (repo_path: str) -> list[ProgramFile]:
+
+async def translate_repo (repo_path: str) -> list[str]:
+    # lconfig = LeanREPLConfig(verbose=True)
+    # lserver = AutoLeanServer(lconfig, max_ )
     files = _extract_files(repo_path)
     prompt = _make_prompt (files)
-    print(prompt)
-    return []
+    # print(prompt)
     messages = [
         {"role": "system", "content": "You are an expert at translating python programs to lean4"},
         {"role": "user", "content": prompt}
     ]
-    result = await client.chat.completions.create(
+    result = (await client.chat.completions.create(
         messages = messages,
         model="gpt-4.1"
-    )
-    with open("out.txt", "w") as f:
-        f.write(result.choices[0].message.content or "")
-    return []
+    )).choices[0].message.content or ""
+    messages.append({"role": "assistant", "content": result})
+    with open("0.txt", "w") as f:
+        f.write(result)
+    # for i in tqdm.tqdm(range(5)):
+    #     code = _extract_code(result)
+    #     res = test_code (code)
+    #     if any([mess.severity == 'error' for mess in res.messages]):
+    #         errors = [f"Line {mess.start_pos.line}: {mess.data}" for mess in res.messages]
+    #         prompt = _make_error_prompt(errors)
+    #         messages.append({"role": "user", "content": prompt})
+    #         result = (await client.chat.completions.create(
+    #             messages = messages,
+    #             model="gpt-4.1"
+    #         )).choices[0].message.content or ""
+    #         with open(f"{i+1}.txt", "w") as f:
+    #             f.write(result)
+    #     else:
+    #         break
+
+    
+    return _extract_code(result)
 
 if __name__ == "__main__":
     asyncio.run(translate_repo("input_repos/mincut"))
