@@ -9,6 +9,7 @@ class LeanTranslator:
     def __init__(self, model: type[Model]):
         self.model = model
         self.log_folder = "logs/"
+        os.makedirs(self.log_folder, exist_ok=True)
     async def translate_file (self, filepath: str) -> str:
         with open (filepath, "r") as f:
             file = ProgramFile(name=os.path.basename(filepath),
