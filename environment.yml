@@ -1,0 +1,10 @@
+name: codegen_testing
+channels:
+  - https://repo.anaconda.com/pkgs/main
+  - https://repo.anaconda.com/pkgs/r
+  - conda-forge
+dependencies:
+  - pip
+  - openai
+  - python-dotenv
+prefix: /Users/tkasriel/miniconda3/envs/codegen_testing

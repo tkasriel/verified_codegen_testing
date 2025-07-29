@@ -1,4 +1,5 @@
 .env
 *.pyc
-output/
+outputs/
 logs/
+lean_sandbox/

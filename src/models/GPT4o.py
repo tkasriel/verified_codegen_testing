@@ -1,23 +1,23 @@
 from openai import AsyncOpenAI
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from models.base_model import Model
 
-class Qwen (Model):
+class GPT4o (Model):
     def __init__(self):
         self.messages = [
-            {"role": "system", "content": "You are an expert Coq programmer"}
+            {"role": "system", "content": "You are an expert Lean4 programmer"}
         ]
-        self.client = AsyncOpenAI(
-                        api_key="EMPTY",
-                        base_url="http://localhost:2731/v1"
-        )
+        self.client = AsyncOpenAI()
     
     async def send (self, message: str) -> str:
         self.messages.append (
             {"role": "user", "content": message}
         )
         result = (await self.client.chat.completions.create(
-            model="Qwen/Qwen3-8B",
+            model="gpt-4o",
             messages=self.messages,
         )).choices[0].message.content or ""
         self.messages.append(

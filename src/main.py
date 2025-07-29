@@ -1,26 +1,51 @@
 
 import os
+
+import tqdm
 from classes import ProgramFile
 from models.base_model import Model
-from utils import extract_code, make_prompt
+from utils import extract_code, make_error_prompt, make_prompt, test_code
+from dotenv import load_dotenv
+load_dotenv()
 
 
 class LeanTranslator:
-    def __init__(self, model: type[Model]):
+    def __init__(self, model: Model):
         self.model = model
         self.log_folder = "logs/"
-    async def translate_file (self, filepath: str) -> str:
+    
+    async def translate_file (self, filepath: str, progress_bar: tqdm.tqdm) -> str:
         with open (filepath, "r") as f:
             file = ProgramFile(name=os.path.basename(filepath),
                                code="\n".join(f.readlines()))
+        local_log_folder= os.path.join(self.log_folder, file.name[:-3])
+        os.makedirs(local_log_folder, exist_ok=True)
+        
         prompt = make_prompt ([file])
         result = await self.model.send (prompt)
-        with open (os.path.join(self.log_folder, "result.txt"), "w") as f:
+        with open (os.path.join(local_log_folder, "result.txt"), "w") as f:
             f.write(result)
         code = extract_code(result)[-1]
-        with open(os.path.join(self.log_folder, "result.v"), 'w') as f:
+        with open(os.path.join(local_log_folder, "result.lean"), 'w') as f:
             f.write(code)
-        return code
+        progress_bar.update()
+        for i in range(10):
+            code = extract_code(result)[-1]
+            res = test_code (code)
+            if any([mess.severity == 'error' for mess in res.messages]):
+                errors = [f"Line {mess.start_pos.line}: {mess.data}" for mess in res.messages if mess.severity == "error"]
+                prompt = make_error_prompt(errors)
+                result = await self.model.send(prompt)
+                with open(os.path.join(local_log_folder, f"{i+1}.txt"), "w") as f:
+                    f.write(result)
+                with open(os.path.join(local_log_folder, f"{i+1}.lean"), "w") as f:
+                    f.write(extract_code(result)[-1])
+            else:
+                progress_bar.close()
+                return code
+            progress_bar.update()
+        progress_bar.close()
+        return "no code generated"
 
 
     # async def translate_repo (repo_path: str) -> list[str]:
@@ -59,9 +84,3 @@ class LeanTranslator:
     
     # return _extract_code(result)
 
-if __name__ == "__main__": 
-    from models.qwen import Qwen
-    import asyncio
-    qwen = Qwen()
-    lt = LeanTranslator(model=Qwen)
-    asyncio.run(lt.translate_file("input_repos/mincut/mincut.py"))
