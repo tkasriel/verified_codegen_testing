@@ -14,7 +14,7 @@ class LeanTranslator:
         self.model = model
         self.log_folder = "logs/"
         os.makedirs(self.log_folder, exist_ok=True)
-    async def translate_file (self, filepath: str) -> str:
+    async def translate_file (self, filepath: str, progress_bar: tqdm.tqdm) -> str:
         with open (filepath, "r") as f:
             file = ProgramFile(name=os.path.basename(filepath),
                                code="\n".join(f.readlines()))
